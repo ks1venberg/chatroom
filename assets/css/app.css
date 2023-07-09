@@ -2,4 +2,33 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-/* This file is for your main application CSS */
+
+  #mainlogo.row {
+  display: flex;
+  margin-top: 10px;
+  }
+
+  #mainlogo.column {
+  min-width: 60px;
+  }
+
+.container {
+    position: relative;
+  }
+
+
+.right-nav {
+    position: absolute;
+    margin-top: 5px;
+    right: 10px;
+  }
+
+.footer {
+  position: fixed;
+  left: 1.5rem;
+  bottom: 0.2rem;
+  width: 100%;
+  background-color: none;
+  color: orange;
+  text-align: center;
+}
