@@ -6,12 +6,19 @@ const fs = require("fs")
 const path = require("path")
 
 module.exports = {
-  mode: 'jit',
+  enabled: process.env.NODE_ENV==="production",
   content: [
-    "./js/**/*.js",
-    "../lib/*_web.ex",
-    "../lib/*_web/**/*.*ex"
+    './js/**/*.js',
+    '../lib/*_web.ex',
+    '../lib/*_web/**/*.ex',
+    '../lib/*_web/**/*.eex',
+    '../lib/*_web/**/*.heex',
+    '../lib/*_web/**/*.leex',
+    '../lib/*_web/**/*_view.ex'
   ],
+  options: {
+    whitelist: [/phx/, /topbar/]
+  },
   theme: {
     extend: {
       colors: {
@@ -20,7 +27,7 @@ module.exports = {
     },
   },
   plugins: [
-    require("@tailwindcss/forms"),
+    require("@tailwindcss/forms", "@tailwindcss/tipography"),
     // Allows prefixing tailwind classes with LiveView classes to add rules
     // only when LiveView classes are applied, for example:
     //
