@@ -5,9 +5,11 @@ defmodule Chatroom.Chats.Chat do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Chatroom.Accounts.User
+
   schema "chats" do
     field :name, :string
-    belongs_to :user, Chatroom.Accounts.User
+    belongs_to :user, User
     timestamps()
   end
 

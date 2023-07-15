@@ -20,7 +20,10 @@ defmodule ChatroomWeb.Router do
   scope "/", ChatroomWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live_session :chat,
+    on_mount: ChatroomWeb.Live.AuthLive do
+      live "/", Live.IndexLive
+    end
   end
 
   # Other scopes may use custom stacks.

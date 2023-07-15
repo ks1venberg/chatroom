@@ -1,6 +1,6 @@
 defmodule Chatroom.Chats do
   @moduledoc """
-    DB logic for Chats
+    DB logic for Chats context
   """
   import Ecto.Query, warn: false
 
@@ -8,20 +8,25 @@ defmodule Chatroom.Chats do
   alias Chatroom.Chats.Chat
 
   @spec get_user_chats(integer) :: [%Chat{}] | []
-  def get_user_chats(user_id) when is_integer(user_id) do
+  def get_user_chats(user_id) do
     Repo.all(from ch in Chat, where: ch.user_id == ^user_id)
   end
 
-  @spec get_chat!(integer()) :: %Chat{} | Ecto.NoResultsError
-  def get_chat!(id) do
+  @spec get_chat_by_id!(integer()) :: %Chat{} | Ecto.NoResultsError
+  def get_chat_by_id!(id) do
     Repo.get!(Chat, id)
   end
 
-  @spec create_chat(%{}) :: {:ok, %Chat{}} | {:error, Ecto.Changeset.t}
+  @spec get_chat_by!(map()) :: %Chat{} | Ecto.NoResultsError
+  def get_chat_by!(opts) do
+    Repo.get_by!(Chat, opts)
+  end
+
+  @spec create_chat(map()):: %Chat{} | Ecto.Error
   def create_chat(attrs) do
-    %Chat{}
-    |> Chat.changeset(attrs)
-    |> Repo.insert()
+      %Chat{}
+      |> Chat.changeset(attrs)
+      |> Repo.insert()
   end
 
 end
