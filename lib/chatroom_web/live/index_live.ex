@@ -20,7 +20,7 @@ defmodule ChatroomWeb.Live.IndexLive do
     ~H"""
       <div class="w-full border shadow bg-white">
         <div class="flex">
-          <.live_component module={Components.ChatList} id="chat_list" current_user={@current_user}/>
+          <.live_component module={Components.ChatList} id="chat_list" current_user={@current_user} current_chat_id={@current_chat_id}/>
           <.live_component module={Components.Messages} id="chat_messages" chat_id={@current_chat_id}/>
         </div>
       </div>

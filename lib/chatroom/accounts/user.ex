@@ -1,6 +1,9 @@
 defmodule Chatroom.Accounts.User do
   use Ecto.Schema
+
   import Ecto.Changeset
+
+  alias Chatroom.Chats.Chat
 
   schema "users" do
     field :email, :string
@@ -9,6 +12,8 @@ defmodule Chatroom.Accounts.User do
     field :confirmed_at, :naive_datetime
 
     timestamps()
+
+    many_to_many :chats, Chat, join_through: "chat_members"
   end
 
   @doc """

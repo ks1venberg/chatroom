@@ -9,8 +9,11 @@ defmodule Chatroom.Chats.Chat do
 
   schema "chats" do
     field :name, :string
-    belongs_to :user, User
+
     timestamps()
+
+    belongs_to :user, User
+    many_to_many :members, User, join_through: "chat_members"
   end
 
   def changeset(chat, attrs) do

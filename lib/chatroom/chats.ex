@@ -3,13 +3,20 @@ defmodule Chatroom.Chats do
     DB logic for Chats context
   """
   import Ecto.Query, warn: false
+  import Ecto.Changeset
 
+  alias Chatroom.Accounts
+  alias Chatroom.Accounts.User
   alias Chatroom.Repo
   alias Chatroom.Chats.Chat
 
-  @spec get_user_chats(integer) :: [%Chat{}] | []
-  def get_user_chats(user_id) do
-    Repo.all(from ch in Chat, where: ch.user_id == ^user_id)
+
+  @spec get_user_chats(%User{}) :: [%Chat{}] | []
+  def get_user_chats(user) do
+    user
+    |> Repo.preload(:chats)
+    |> Map.get(:chats)
+    # Repo.all(from ch in Chat, where: ch.user_id == ^user_id)
   end
 
   @spec get_chat_by_id!(integer()) :: %Chat{} | Ecto.NoResultsError
@@ -24,9 +31,21 @@ defmodule Chatroom.Chats do
 
   @spec create_chat(map()):: %Chat{} | Ecto.Error
   def create_chat(attrs) do
+    user = Accounts.get_user!(attrs.user_id)
+
       %Chat{}
       |> Chat.changeset(attrs)
+      |> put_assoc(:members, [user])
       |> Repo.insert()
+  end
+
+  def add_user(user, chat) do
+    chat = Repo.preload(chat, :members)
+
+    chat
+    |> Chat.changeset(%{})
+    |> put_assoc(:members, [user | chat.members])
+    |> Repo.update()
   end
 
 end

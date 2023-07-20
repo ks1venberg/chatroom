@@ -1,6 +1,8 @@
 defmodule ChatroomWeb.Router do
   use ChatroomWeb, :router
 
+  import Phoenix.LiveView.Router
+
   import ChatroomWeb.UserAuth
 
   pipeline :browser do
@@ -23,6 +25,7 @@ defmodule ChatroomWeb.Router do
     live_session :chat,
     on_mount: ChatroomWeb.Live.AuthLive do
       live "/", Live.IndexLive
+      live "/chats/:chat_id", Live.JoinChatLive
     end
   end
 
