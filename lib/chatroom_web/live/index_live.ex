@@ -7,6 +7,8 @@ defmodule ChatroomWeb.Live.IndexLive do
   # need to put current_chat_id in LiveView connection
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: Phoenix.PubSub.subscribe(Chatroom.PubSub, "chats")
+
     {:ok, assign(socket, current_chat_id: nil)}
   end
 
@@ -21,7 +23,7 @@ defmodule ChatroomWeb.Live.IndexLive do
       <div class="w-full border shadow bg-white">
         <div class="flex">
           <.live_component module={Components.ChatList} id="chat_list" current_user={@current_user} current_chat_id={@current_chat_id}/>
-          <.live_component module={Components.Messages} id="chat_messages" chat_id={@current_chat_id}/>
+          <.live_component module={Components.Messages} id="messages" current_user={@current_user} chat_id={@current_chat_id}/>
         </div>
       </div>
     """
@@ -30,6 +32,15 @@ defmodule ChatroomWeb.Live.IndexLive do
   @impl true
   def handle_event("join-chat", %{"id" => chat_id} = _event, socket) do
     {:noreply, assign(socket, current_chat_id: chat_id)}
+  end
+
+  @impl true
+  def handle_info({:messages, chat_id, message}, socket) do
+    current_chat = socket.assigns.current_chat_id
+    if current_chat && chat_id == String.to_integer(current_chat) do
+      send_update(Components.Messages, id: "messages", new_message: message)
+    end
+    {:noreply, socket}
   end
 
 end
