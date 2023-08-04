@@ -24,11 +24,12 @@ import topbar from "../vendor/topbar"
 import * as storage from "./local_storage"
 
 let Hooks = {}
+
 Hooks.GetAllChatMessages = {
   mounted() {
     window.addEventListener(`phx:get_localstorage_msgs`, (e) => {
       const chat_id = e.detail.chat_id
-      this.pushEventTo("#messages", "get_chat_msgs", storage.get_localstorage_msgs(chat_id))
+      this.pushEventTo("#messages", "recieve_new_message", storage.get_localstorage_msgs(chat_id))
     })
   }
 }
@@ -47,14 +48,14 @@ window.addEventListener(`phx:connect_by_chat_id`, (e) => {
     navigator.clipboard.writeText(e.detail.link);
   })
 
-window.addEventListener(`phx:get_chat_msgs`, (e) => {
+window.addEventListener(`phx:jscall_new_message`, (e) => {
   // Store e.detail.message in local storage
   let chat_messages = storage.get_localstorage_msgs(e.detail.chat_id) || []
-  chat_messages.push(e.detail.body)
+  chat_messages.push(e.detail.message)
   storage.save_messages(e.detail.chat_id, chat_messages)
 })
 
-window.addEventListener(`phx:clear_msg_input`, (e) => {
+window.addEventListener(`phx:clear_input_field`, (e) => {
   // Clear input after sending message
   document.getElementById(e.detail.field_id).value = ''
 })

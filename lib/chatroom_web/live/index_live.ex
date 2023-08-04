@@ -1,8 +1,8 @@
 defmodule ChatroomWeb.Live.IndexLive do
 
   use ChatroomWeb, :live_view
-
   alias ChatroomWeb.Live.Components
+  require Logger
 
   # need to put current_chat_id in LiveView connection
   @impl true
@@ -13,7 +13,7 @@ defmodule ChatroomWeb.Live.IndexLive do
   end
 
   @impl true
-  def handle_params(_params, _url, socket) do
+  def handle_params(_params, _uri, socket) do
     {:noreply, socket}
   end
 
@@ -30,15 +30,17 @@ defmodule ChatroomWeb.Live.IndexLive do
   end
 
   @impl true
-  def handle_event("join-chat", %{"id" => chat_id} = _event, socket) do
+  def handle_event("connect_to_chat", %{"id" => chat_id} = _event, socket) do
+    Logger.info("ChatroomWeb.Live.IndexLive, connect_to_chat: #{chat_id} messages:#{inspect(Map.get(socket.assigns, :messages), pretty: true)}")
+    Logger.info("ChatroomWeb.Live.IndexLive, socket #{inspect(socket, pretty: true)}")
     {:noreply, assign(socket, current_chat_id: chat_id)}
   end
 
   @impl true
-  def handle_info({:messages, chat_id, message}, socket) do
+  def handle_info({:message, chat_id, message}, socket) do
     current_chat = socket.assigns.current_chat_id
     if current_chat && chat_id == String.to_integer(current_chat) do
-      send_update(Components.Messages, id: "messages", new_message: message)
+      send_update(Components.Messages, id: "messages", recieve_new_message: message)
     end
     {:noreply, socket}
   end
