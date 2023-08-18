@@ -15,8 +15,8 @@ defmodule ChatroomWeb.Live.Components.Messages do
     {:ok, assign(socket, chat: nil)}
   end
 
-  def update(%{id: id, current_user: current_user, chat_id: chat_id} = _assigns, socket) do
-
+  def update(%{id: id, current_user: current_user, chat_id: chat_id} = assigns, socket) do
+    Logger.info("Messages update 0: \n new assigns: #{inspect(assigns, pretty: true)}, \n socket.assigns: #{inspect(socket.assigns, pretty: true)}")
     {:ok, socket
     |> assign(
       id: id,
@@ -25,36 +25,42 @@ defmodule ChatroomWeb.Live.Components.Messages do
       messages: [],
       current_user: current_user)
     |> push_event("get_localstorage_msgs", %{chat_id: chat_id})}
-
   end
 
   @impl true
-  def update(%{recieve_new_message: message} = _assigns, socket) do
-    Logger.info("recieve_new_message: #{inspect(message, pretty: true)}, \n socket.assigns.messages: #{inspect(socket.assigns.messages, pretty: true)}")
-    # (@messages, &(DateTime.to_unix(&1["timestamp"]) >= DateTime.to_unix(&2["timestamp"])))
-    {:ok, socket
-      |> assign(messages: [message | socket.assigns.messages] |> Enum.sort(&(&1["dt_unix"] >= &2["dt_unix"])))
-      |> push_event(
-        "jscall_new_message",
-        %{
-          chat_id: socket.assigns.chat.id,
-          message: message,
-          field_id: "message_body"
-        }
-      )}
+  def update(%{chat_id: chat_id, recieve_new_message: message} = assigns, socket) do
+
+    Logger.info("Messages update: #{inspect(message, pretty: true)}, \n new assigns: #{inspect(assigns, pretty: true)}, \n socket.assigns: #{inspect(socket.assigns, pretty: true)}")
+
+      {:ok, socket
+        |> assign(
+          chat: Chats.get_chat_by_id!(chat_id),
+          messages: [message | socket.assigns.messages] |> Enum.sort(&(&1["dt_unix"] >= &2["dt_unix"])),
+          current_chat_id: chat_id)
+        |> push_event(
+          "jscall_new_message",
+          %{
+            chat_id: chat_id,
+            message: message,
+            field_id: "message_body"
+          })
+        |> push_event("get_localstorage_msgs", %{chat_id: chat_id})
+      }
+
   end
 
   @impl true
   def render(%{chat: nil} = assigns) do
     ~H"""
     <div class="w-full flex flex-col px-1 py-1">
-     Click on chat name to start messaging..
+     click on chat name to start messaging
     </div>
     """
   end
 
   @impl true
   def render(assigns) do
+      Logger.info("Messages render(assigns): #{inspect(assigns, pretty: true)}")
     ~H"""
       <div id={@id} class="w-full flex flex-col" phx-hook="GetAllChatMessages">
         <div class="border-b flex px-6 py-2 items-center">
@@ -79,7 +85,7 @@ defmodule ChatroomWeb.Live.Components.Messages do
           <%= for message <- @messages do %>
             <div class="container mt-2">
               <div class="flex items-start">
-                <span class="font-bold text-md mr-2 font-sans"><%= if message["user_email"], do: "User: #{hd(String.split(message["user_email"], "@"))}" %></span>
+                <span class="font-bold text-md mr-2 font-sans"><%= hd(String.split(message["user_email"], "@")) %></span>
                 <span class="font-400 text-md text-gray-800 ml-4"><%= message["body"] %></span>
               <div class="float-right ml-10 overflow-hidden">
                 <span class="text-s text-gray-400"><%=message["timestamp"]%>
@@ -119,7 +125,10 @@ defmodule ChatroomWeb.Live.Components.Messages do
   end
 
   @impl true
-  def handle_event("submit", %{"body" => message_body}, socket) do
+  def handle_event("submit", %{"body" => message_body} = assigns, socket) do
+
+    Logger.info("Messages submit: #{inspect(assigns, pretty: true)}")
+
     if String.trim(message_body) == "" do
       {:noreply, socket}
     else
@@ -137,6 +146,7 @@ defmodule ChatroomWeb.Live.Components.Messages do
         "chats",
         {:message, socket.assigns.chat.id, message}
       )
+      Logger.info("Messages submit Phoenix.PubSub: #{inspect(socket.assigns, pretty: true)}")
 
       {:noreply, socket |> push_event("clear_input_field", %{field_id: "message_body"})}
     end
@@ -146,8 +156,9 @@ defmodule ChatroomWeb.Live.Components.Messages do
     {:noreply, socket |> assign(messages: [])}
   end
 
+  # Puts messages array in socket.assigns with sorting it by timestamp
   def handle_event("recieve_new_message", messages, socket) do
-    {:noreply, socket |> assign(messages: messages)}
+    {:noreply, socket |> assign(messages: messages |> Enum.sort(&(&1["dt_unix"] >= &2["dt_unix"])))}
   end
 
 end

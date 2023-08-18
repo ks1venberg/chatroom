@@ -10,6 +10,10 @@ defmodule Chatroom.Chats do
   alias Chatroom.Repo
   alias Chatroom.Chats.Chat
 
+  @spec get_all() :: [%Chat{}] | []
+  def get_all() do
+    Repo.all(from ch in Chat)
+  end
 
   @spec get_user_chats(%User{}) :: [%Chat{}] | []
   def get_user_chats(user) do

@@ -36,12 +36,26 @@ Hooks.GetAllChatMessages = {
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
-
+// let channel = liveSocket.channel(`app:${document.querySelector("meta[name='csrf-token']").getAttribute("content")}`, {})
+//   channel.join()
 
 // Show progress bar on live navigation and form submits
 topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
+
+// capture message to activate chat
+// window.addEventListener("DOMContentLoaded", (e) => {});
+window.addEventListener("submit", (e) => {
+  const message_body = document.getElementById("message_body")["value"]
+  var last_chat = parseInt(window["localStorage"].key(0).slice(-1))
+
+  console.log("Log message for message_body:", message_body, last_chat);
+
+  // if (message_body) {
+  //     channel.push("connect_to_chat", {id: last_chat});
+  // }
+});
 
 // Get the connection link to join chat 
 window.addEventListener(`phx:connect_by_chat_id`, (e) => {
