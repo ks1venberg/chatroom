@@ -30,7 +30,17 @@ Hooks.GetAllChatMessages = {
     window.addEventListener(`phx:get_localstorage_msgs`, (e) => {
       const chat_id = e.detail.chat_id
       this.pushEventTo("#messages", "recieve_new_message", storage.get_localstorage_msgs(chat_id))
-    })
+    });
+    
+  }
+}
+
+Hooks.NewChat = {
+  mounted() {
+    window.addEventListener(`phx:chat_created`, (e) => {
+      console.log("Log message for chat_created", e.detail)
+      this.pushEvent("update_chat_fromjs", e.detail)
+    }) 
   }
 }
 
@@ -45,24 +55,25 @@ window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
 // capture message to activate chat
-// window.addEventListener("DOMContentLoaded", (e) => {});
-window.addEventListener("submit", (e) => {
-  const message_body = document.getElementById("message_body")["value"]
-  var last_chat = parseInt(window["localStorage"].key(0).slice(-1))
 
-  console.log("Log message for message_body:", message_body, last_chat);
+// window.addEventListener("DOMContentLoaded", (e) => {});
+// window.addEventListener("submit", (e) => {
+//   const message_body = document.getElementById("message_body")["value"]
+//   var last_chat = parseInt(window["localStorage"].key(0).slice(-1))
+
+//   console.log("Log message for message_body:", message_body, last_chat);
 
   // if (message_body) {
-  //     channel.push("connect_to_chat", {id: last_chat});
+  //     channel.push("connect_to_", {id: last_chat});
   // }
-});
+// });
 
 // Get the connection link to join chat 
-window.addEventListener(`phx:connect_by_chat_id`, (e) => {
+window.addEventListener(`phx:js_copy_chat_link`, (e) => {
     navigator.clipboard.writeText(e.detail.link);
   })
 
-window.addEventListener(`phx:jscall_new_message`, (e) => {
+window.addEventListener(`phx:js_save_new_message`, (e) => {
   // Store e.detail.message in local storage
   let chat_messages = storage.get_localstorage_msgs(e.detail.chat_id) || []
   chat_messages.push(e.detail.message)
@@ -73,6 +84,8 @@ window.addEventListener(`phx:clear_input_field`, (e) => {
   // Clear input after sending message
   document.getElementById(e.detail.field_id).value = ''
 })
+
+
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()

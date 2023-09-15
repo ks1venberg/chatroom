@@ -3,6 +3,7 @@ defmodule ChatroomWeb.Live.JoinChatLive do
   Joining the chat for users
   """
   use ChatroomWeb, :live_view
+  require Logger
 
   alias Chatroom.Chats
 
@@ -16,8 +17,15 @@ defmodule ChatroomWeb.Live.JoinChatLive do
     chat = Chats.get_chat_by_id!(chat_id)
     {:ok, chat} = Chats.add_user(user, chat)
 
+    Logger.info("JoinChatLive: #{chat_id},chat: #{inspect(chat, pretty: true)}")
+
+    send_update(Components.ChatList, id: "chat_list", current_user: user, current_chat_id: chat_id)
+
     {:noreply,
-     socket |> put_flash(:info, "Chat #{chat.name} connected!") |> Phoenix.LiveView.redirect(to: "/")}
+    socket
+          |> Phoenix.LiveView.redirect(to: "/")
+          |> put_flash(:info, "Chat #{chat.name} connected!")
+          |> assign(current_chat_id: chat_id)}
   end
 
   @impl true

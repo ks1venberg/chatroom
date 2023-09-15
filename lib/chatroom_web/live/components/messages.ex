@@ -4,8 +4,6 @@ defmodule ChatroomWeb.Live.Components.Messages do
   """
   use ChatroomWeb, :live_component
 
-  require Logger
-
   alias Chatroom.Chats
   alias ChatroomWeb.Live.JoinChatLive
   alias ChatroomWeb.Router.Helpers, as: Routes
@@ -15,30 +13,33 @@ defmodule ChatroomWeb.Live.Components.Messages do
     {:ok, assign(socket, chat: nil)}
   end
 
-  def update(%{id: id, current_user: current_user, chat_id: chat_id} = assigns, socket) do
-    Logger.info("Messages update 0: \n new assigns: #{inspect(assigns, pretty: true)}, \n socket.assigns: #{inspect(socket.assigns, pretty: true)}")
+  def update(%{id: id, current_user: current_user, chat_id: chat_id}, socket) do
+
+    current_chat_id = if is_integer(chat_id), do: Integer.to_string(chat_id), else: chat_id
+
     {:ok, socket
-    |> assign(
+      |> assign(
       id: id,
       chat: Chats.get_chat_by_id!(chat_id),
       recieved_chat_id: false,
       messages: [],
+      current_chat_id: current_chat_id,
       current_user: current_user)
-    |> push_event("get_localstorage_msgs", %{chat_id: chat_id})}
+      |> push_event("get_localstorage_msgs", %{chat_id: chat_id})}
   end
 
   @impl true
-  def update(%{chat_id: chat_id, recieve_new_message: message} = assigns, socket) do
+  def update(%{chat_id: chat_id, recieve_new_message: message}, socket) do
 
-    Logger.info("Messages update: #{inspect(message, pretty: true)}, \n new assigns: #{inspect(assigns, pretty: true)}, \n socket.assigns: #{inspect(socket.assigns, pretty: true)}")
+    current_chat_id = if is_integer(chat_id), do: Integer.to_string(chat_id), else: chat_id
 
       {:ok, socket
         |> assign(
           chat: Chats.get_chat_by_id!(chat_id),
           messages: [message | socket.assigns.messages] |> Enum.sort(&(&1["dt_unix"] >= &2["dt_unix"])),
-          current_chat_id: chat_id)
+          current_chat_id: current_chat_id)
         |> push_event(
-          "jscall_new_message",
+          "js_save_new_message",
           %{
             chat_id: chat_id,
             message: message,
@@ -46,21 +47,19 @@ defmodule ChatroomWeb.Live.Components.Messages do
           })
         |> push_event("get_localstorage_msgs", %{chat_id: chat_id})
       }
-
   end
 
   @impl true
   def render(%{chat: nil} = assigns) do
     ~H"""
     <div class="w-full flex flex-col px-1 py-1">
-     click on chat name to start messaging
+     Click on chat name to start messaging
     </div>
     """
   end
 
   @impl true
   def render(assigns) do
-      Logger.info("Messages render(assigns): #{inspect(assigns, pretty: true)}")
     ~H"""
       <div id={@id} class="w-full flex flex-col" phx-hook="GetAllChatMessages">
         <div class="border-b flex px-6 py-2 items-center">
@@ -69,7 +68,7 @@ defmodule ChatroomWeb.Live.Components.Messages do
             <div class="text-gray-400 text-sm link">
               Connect to this chat
               <svg xmlns="http://www.w3.org/2000/svg" onmouseover="this.style.cursor='pointer'" viewBox="0 2 24 24" class="w-6 h-6 inline mx-2" fill="Green" stroke="Green"
-                phx-click="connect_by_chat_id"
+                phx-click="connect_by_chat_link"
                 phx-value-chat_id={@chat.id}
                 phx-target={@myself}>
                 <path fill-rule="evenodd" d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z" clip-rule="evenodd" />
@@ -111,7 +110,7 @@ defmodule ChatroomWeb.Live.Components.Messages do
 
   # route can be done by LiveView helper 'live_path'
   @impl true
-  def handle_event("connect_by_chat_id", %{"chat_id" => chat_id} = _assigns, socket) do
+  def handle_event("connect_by_chat_link", %{"chat_id" => chat_id} = _assigns, socket) do
 
     # ChatroomWeb.Router.Helpers.live_path(ChatroomWeb.Endpoint, ChatroomWeb.Live.JoinChatLive, "2")
     # "/chats/2"
@@ -121,13 +120,11 @@ defmodule ChatroomWeb.Live.Components.Messages do
     {:noreply,
      socket
      |> assign(recieved_chat_id: true, link: link)
-     |> push_event("connect_by_chat_id", %{link: link})}
+     |> push_event("js_copy_chat_link", %{link: link})}
   end
 
   @impl true
-  def handle_event("submit", %{"body" => message_body} = assigns, socket) do
-
-    Logger.info("Messages submit: #{inspect(assigns, pretty: true)}")
+  def handle_event("submit", %{"body" => message_body}, socket) do
 
     if String.trim(message_body) == "" do
       {:noreply, socket}
@@ -146,17 +143,18 @@ defmodule ChatroomWeb.Live.Components.Messages do
         "chats",
         {:message, socket.assigns.chat.id, message}
       )
-      Logger.info("Messages submit Phoenix.PubSub: #{inspect(socket.assigns, pretty: true)}")
 
       {:noreply, socket |> push_event("clear_input_field", %{field_id: "message_body"})}
     end
   end
 
+  @impl true
   def handle_event("recieve_new_message", nil, socket) do
     {:noreply, socket |> assign(messages: [])}
   end
 
   # Puts messages array in socket.assigns with sorting it by timestamp
+  @impl true
   def handle_event("recieve_new_message", messages, socket) do
     {:noreply, socket |> assign(messages: messages |> Enum.sort(&(&1["dt_unix"] >= &2["dt_unix"])))}
   end

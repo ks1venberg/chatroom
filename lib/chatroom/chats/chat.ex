@@ -21,6 +21,7 @@ defmodule Chatroom.Chats.Chat do
     |> cast(attrs, [:name, :user_id])
     |> validate_required([:name, :user_id])
     |> validate_length(:name, min: 3, max: 20)
+    |> unique_constraint(:name)
   end
 
 end

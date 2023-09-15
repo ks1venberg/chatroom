@@ -33,7 +33,7 @@ defmodule Chatroom.Chats do
     Repo.get_by!(Chat, opts)
   end
 
-  @spec create_chat(map()):: %Chat{} | Ecto.Error
+  @spec create_chat(map()):: {:ok, %Chat{}} | {:error, Ecto.Changeset.t()}
   def create_chat(attrs) do
     user = Accounts.get_user!(attrs.user_id)
 
