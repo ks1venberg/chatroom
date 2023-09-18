@@ -9,8 +9,8 @@ defmodule ChatroomWeb.Live.IndexLive do
   # need to put current_chat_id in LiveView connection
   @impl true
   def mount(_params, _session, socket) do
+    Process.send_after(self(), :clear_flash, 3000)
     if connected?(socket), do: Phoenix.PubSub.subscribe(Chatroom.PubSub, "chats")
-
     {:ok, assign(socket, current_chat_id: nil)}
   end
 
@@ -48,7 +48,7 @@ defmodule ChatroomWeb.Live.IndexLive do
   @impl true
   def handle_event("update_chat_fromjs",  %{"new_chat_id" => chat_id, "user_id" => user_id} = params, socket) do
 
-    Logger.info("IndexLive: #{inspect(params, pretty: true)}
+    Logger.debug("IndexLive: #{inspect(params, pretty: true)}
     \n current_chat_id #{inspect(socket.assigns.current_chat_id)} user.id:#{inspect(socket.assigns.current_user.id)}")
 
     send_update(Components.ChatList, id: "chat_list", user_id: user_id, new_chat_id: chat_id)
@@ -57,18 +57,25 @@ defmodule ChatroomWeb.Live.IndexLive do
   end
 
   @doc """
-  Updates ChatList when new chat added; need to stay active on current dialog
+  Updates ChatList when new chat added; on update - we are keeping active current dialog
   """
   @impl true
-  def handle_info({:chat, _chat_id, user_id} = assigns, socket) do
+  def handle_info({:new_chat, chat_name, user_id} = assigns, socket) do
 
-    Logger.info("IndexLive, handle_info_chat: #{inspect(assigns)}, current_chat_id: #{inspect(socket.assigns.current_chat_id)}")
+    Logger.debug("IndexLive, handle_info_chat: #{inspect(assigns)}, current_chat_id: #{inspect(socket.assigns.current_chat_id)}")
 
     send_update(Components.ChatList, id: "chat_list", current_user: Accounts.get_user!(user_id), current_chat_id: socket.assigns.current_chat_id)
 
-    {:noreply, socket}
+    if user_id != socket.assigns.current_user.id do
+      Process.send_after(self(), :clear_flash, 3000)
+      {:noreply, socket |> put_flash(:info, "Created new chat: #{chat_name}")}
+    else
+      {:noreply, socket}
+    end
+
   end
 
+  # Recieves message and then updates both components
   @impl true
   def handle_info({:message, chat_id, message}, socket) do
 
@@ -85,6 +92,11 @@ defmodule ChatroomWeb.Live.IndexLive do
 
     {:noreply, socket |> assign(current_chat_id: id_to_str(chat_id))}
   end
+
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
+  end
+
 
   def id_to_str(id) do
     if is_integer(id), do: Integer.to_string(id), else: id

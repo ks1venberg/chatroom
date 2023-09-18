@@ -16,7 +16,6 @@ defmodule ChatroomWeb.Live.Components.ChatList do
      assign(socket,
       current_user: current_user,
       current_chat_id: nil,
-      user_chats: Chats.get_user_chats(current_user),
       all_chats: Chats.get_all()
      )}
   end
@@ -29,7 +28,6 @@ defmodule ChatroomWeb.Live.Components.ChatList do
      assign(socket,
       current_user: current_user,
       current_chat_id: current_chat_id,
-      user_chats: Chats.get_user_chats(current_user),
       all_chats: Chats.get_all()
      )}
   end
@@ -39,8 +37,8 @@ defmodule ChatroomWeb.Live.Components.ChatList do
   def update(%{user_id: user_id, new_chat_id: new_chat_id} = assigns, socket) do
     Logger.debug("ChatList, update - new chat: #{inspect(assigns, pretty: true)}, current_chat_id: #{inspect(socket.assigns.current_chat_id)}
     ")
-
-    Phoenix.PubSub.broadcast(Chatroom.PubSub, "chats", {:chat, new_chat_id, user_id})
+    chat_name = Chats.get_chat_by_id!(new_chat_id).name
+    Phoenix.PubSub.broadcast(Chatroom.PubSub, "chats", {:new_chat, chat_name, user_id})
 
     {:ok, socket}
   end
@@ -75,14 +73,14 @@ defmodule ChatroomWeb.Live.Components.ChatList do
   """
   @impl true
   def handle_event("create-chat", %{"new_chat_name" => chat_name}, socket) do
-    Logger.debug("ChatList, handle_create-chat: #{chat_name}")
+    Logger.debug("ChatList, handle_enent create-chat: #{chat_name}")
 
     case Chatroom.Chats.create_chat(%{name: chat_name, user_id: socket.assigns.current_user.id}) do
       {:ok, chat} ->
         {:noreply,
           socket
           |> push_event("clear_input_field", %{field_id: "new_chat_id"})
-          |> push_event("chat_created", %{new_chat_id: chat.id, user_id: chat.user_id})}
+          |> push_event("chat_created", %{new_chat_id: chat.id, new_chat_name: chat_name, user_id: chat.user_id})}
       {:error, %Ecto.Changeset{} = changeset} ->
         Repo.insert(changeset)
         {:noreply, socket}
