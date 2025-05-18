@@ -6,38 +6,48 @@ defmodule ChatroomWeb.UserRegistrationLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-sm">
-      <.header class="text-center">
-        Register for an account
-        <:subtitle>
-          Already registered?
-          <.link navigate={~p"/user/log_in"} class="font-semibold text-brand hover:underline">
-            Sign in
-          </.link>
-          to your account now.
-        </:subtitle>
-      </.header>
+    <div class="bg-gray-100 py-6 justify-center sm:py-12 ">
+      <div class="relative py-3 sm:max-w-sm sm:mx-auto">
+        <div
+          class="absolute inset-0 bg-gradient-to-r from-blue-300 to-blue-600 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl">
+        </div>
+        <div class="relative px-4 py-5 bg-white shadow-lg rounded-3xl sm:px-16 sm:py-10">
+          <div class="max-w-sm mx-auto">
+            <.header class="text-center">
+              Register for an account
+              <:subtitle>
+                Already registered?
+                <.link navigate={~p"/user/log_in"} class="font-semibold text-brand hover:underline">
+                  Sign in
+                </.link>
+                to your account now.
+              </:subtitle>
+            </.header>
+            <div class="divide-y divide-gray-200">
+            <.simple_form
+              for={@form}
+              id="registration_form"
+              phx-submit="save"
+              phx-change="validate"
+              phx-trigger-action={@trigger_submit}
+              action={~p"/user/log_in?_action=registered"}
+              method="post"
+            >
+              <.error :if={@check_errors}>
+                Oops, something went wrong! Please check the errors below.
+              </.error>
 
-      <.simple_form
-        for={@form}
-        id="registration_form"
-        phx-submit="save"
-        phx-change="validate"
-        phx-trigger-action={@trigger_submit}
-        action={~p"/user/log_in?_action=registered"}
-        method="post"
-      >
-        <.error :if={@check_errors}>
-          Oops, something went wrong! Please check the errors below.
-        </.error>
+              <.input field={@form[:email]} type="email" label="Email" required />
+              <.input field={@form[:password]} type="password" label="Password" required />
 
-        <.input field={@form[:email]} type="email" label="Email" required />
-        <.input field={@form[:password]} type="password" label="Password" required />
-
-        <:actions>
-          <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
-        </:actions>
-      </.simple_form>
+              <:actions>
+                <.button id="submit_btn" phx-disable-with="Creating account..." class=" w-full">Create an account</.button>
+              </:actions>
+            </.simple_form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     """
   end

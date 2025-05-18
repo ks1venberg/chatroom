@@ -18,17 +18,21 @@
 
 
 .right-nav {
-    position: absolute;
+    position: fixed;
     margin-top: 5px;
     right: 10px;
   }
 
 .footer {
   position: fixed;
-  left: 1.5rem;
+  right: 0.5rem;
   bottom: 0.2rem;
   width: 100%;
   background-color: none;
   color: orange;
   text-align: center;
+}
+
+#submit_btn {
+  background-color: rgb(36, 93, 239);
 }

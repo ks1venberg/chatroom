@@ -4,6 +4,7 @@
 const plugin = require("tailwindcss/plugin")
 const fs = require("fs")
 const path = require("path")
+const colors = require('tailwindcss/colors')
 
 module.exports = {
   enabled: process.env.NODE_ENV==="production",
@@ -23,6 +24,8 @@ module.exports = {
     extend: {
       colors: {
         brand: "#FD4F00",
+        sky: colors.sky,
+        cyan: colors.cyan
       }
     },
   },
